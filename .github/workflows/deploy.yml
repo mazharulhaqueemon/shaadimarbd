@@ -1,10 +1,9 @@
 name: 🚀 Deploy Laravel to Hostinger VPS
 
-# sabbir
 on:
   push:
     branches:
-      - Sabbir_merge   # 👈 your current working branch
+      - Sabbir_merge # 👈 your current working branch
 
 jobs:
   deploy:
@@ -28,24 +27,28 @@ jobs:
         run: |
           ssh root@193.168.195.68 << 'EOF'
           set -e
-
           cd /var/www/bmc
 
-          echo ">>> Fetching latest code from Sabbir_merge branch"
-          git fetch origin Sabbir_merge
-          git checkout Sabbir_merge
-          git reset --hard origin/Sabbir_merge
+          echo ">>> 🔄 Fetching latest code from Sabbir_merge branch"
+          # Ensure correct remote is used
+          if ! git remote | grep -q bmc-backend; then
+            git remote add bmc-backend git@github.com:mazharulhaqueemon/bmc.git
+          fi
 
-          echo ">>> Ensuring .env file exists"
+          git fetch bmc-backend Sabbir_merge
+          git reset --hard bmc-backend/Sabbir_merge
+          git clean -fd
+
+          echo ">>> 🔍 Checking .env file"
           if [ ! -f .env ]; then
             cp .env.example .env
             echo ".env file created from example"
           fi
 
-          echo ">>> Installing Composer dependencies"
-          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+          echo ">>> 🧰 Installing Composer dependencies"
+          composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
-          echo ">>> Running Laravel optimizations"
+          echo ">>> 🧹 Running Laravel optimizations"
           php artisan migrate --force || echo "⚠️ Migration failed or already up-to-date"
           php artisan config:clear
           php artisan cache:clear
@@ -53,17 +56,17 @@ jobs:
           php artisan view:cache
           php artisan optimize
 
-          echo ">>> Fixing permissions"
+          echo ">>> 🔒 Fixing permissions"
           chown -R www-data:www-data /var/www/bmc
           chmod -R 775 /var/www/bmc
           find /var/www/bmc -type d -exec chmod g+s {} \;
 
-          echo ">>> Reloading services"
+          echo ">>> 🔁 Restarting PHP and Nginx services"
           systemctl reload php8.2-fpm || systemctl restart php8.2-fpm
           systemctl reload nginx || systemctl restart nginx
 
-          echo ">>> Checking site health"
-          curl -Is http://localhost | head -n 1
+          echo ">>> 🔎 Health check"
+          curl -Is http://localhost | head -n 1 || echo "⚠️ Health check warning: please verify manually"
 
-          echo ">>> ✅ Deployment Successful!"
+          echo ">>> ✅ Deployment completed successfully!"
           EOF
