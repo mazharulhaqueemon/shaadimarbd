@@ -11,9 +11,12 @@ use App\Models\PhoneRequest;
 use App\Models\ProfilePicture;
 use App\Models\Payment;
 use App\Models\Profile;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
 
-class User extends Authenticatable
+
+class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, HasApiTokens, Notifiable;
 
@@ -78,6 +81,11 @@ class User extends Authenticatable
     // Relationship: User has many Profile Pictures
     public function profilePictures(){
         return $this->hasMany(ProfilePicture::class);
+    }
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Only allow users with is_admin = 1
+        return $this->is_admin === 1;
     }
 
     // Relationship: User has one primary Profile Picture
