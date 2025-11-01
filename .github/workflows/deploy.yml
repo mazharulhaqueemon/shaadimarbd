@@ -3,7 +3,7 @@ name: 🚀 Deploy Laravel to Hostinger VPS
 on:
   push:
     branches:
-      - Sabbir_merge # your deployment branch
+      - Sabbir_merge
 
 jobs:
   deploy:
@@ -30,6 +30,9 @@ jobs:
 
           cd /var/www/bmc
 
+          echo ">>> Ensuring bmc owns the folder"
+          sudo chown -R bmc:bmc /var/www/bmc
+
           echo ">>> Marking repository as safe directory"
           git config --global --add safe.directory /var/www/bmc
 
@@ -55,12 +58,12 @@ jobs:
           php artisan view:cache
           php artisan optimize
 
-          echo ">>> Fixing permissions (passwordless sudo required)"
+          echo ">>> Fixing permissions for web server"
           sudo chown -R www-data:www-data /var/www/bmc
           sudo chmod -R 775 /var/www/bmc
           sudo find /var/www/bmc -type d -exec chmod g+s {} \;
 
-          echo ">>> Reloading services (passwordless sudo required)"
+          echo ">>> Reloading services"
           sudo systemctl reload php8.3-fpm || sudo systemctl restart php8.3-fpm
           sudo systemctl reload nginx || sudo systemctl restart nginx
 
