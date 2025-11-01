@@ -1,0 +1,68 @@
+name: 🚀 Deploy Laravel to Hostinger VPS
+
+on:
+  push:
+    branches:
+      - Sabbir_merge   # 👈 your current working branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔑 Setup SSH Access
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: 🧱 Add Server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H 193.168.195.68 >> ~/.ssh/known_hosts
+
+      - name: 🚀 Deploy Laravel App to VPS
+        run: |
+          ssh root@193.168.195.68 << 'EOF'
+          set -e
+
+          cd /var/www/bmc
+
+          echo ">>> Fetching latest code from Sabbir_merge branch"
+          git fetch origin Sabbir_merge
+          git checkout Sabbir_merge
+          git reset --hard origin/Sabbir_merge
+
+          echo ">>> Ensuring .env file exists"
+          if [ ! -f .env ]; then
+            cp .env.example .env
+            echo ".env file created from example"
+          fi
+
+          echo ">>> Installing Composer dependencies"
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+          echo ">>> Running Laravel optimizations"
+          php artisan migrate --force || echo "⚠️ Migration failed or already up-to-date"
+          php artisan config:clear
+          php artisan cache:clear
+          php artisan route:cache
+          php artisan view:cache
+          php artisan optimize
+
+          echo ">>> Fixing permissions"
+          chown -R www-data:www-data /var/www/bmc
+          chmod -R 775 /var/www/bmc
+          find /var/www/bmc -type d -exec chmod g+s {} \;
+
+          echo ">>> Reloading services"
+          systemctl reload php8.2-fpm || systemctl restart php8.2-fpm
+          systemctl reload nginx || systemctl restart nginx
+
+          echo ">>> Checking site health"
+          curl -Is http://localhost | head -n 1
+
+          echo ">>> ✅ Deployment Successful!"
+          EOF
