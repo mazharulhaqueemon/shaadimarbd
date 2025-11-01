@@ -3,7 +3,7 @@ name: 🚀 Deploy Laravel to Hostinger VPS
 on:
   push:
     branches:
-      - Sabbir_merge # Your working branch
+      - Sabbir_merge   # your deployment branch
 
 jobs:
   deploy:
@@ -18,56 +18,51 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
-      - name: 🧱 Add VPS and GitHub to known_hosts
+      - name: 🧱 Add VPS to known_hosts
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H 193.168.195.68 >> ~/.ssh/known_hosts
-          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 
       - name: 🚀 Deploy Laravel App to VPS
         run: |
           ssh root@193.168.195.68 << 'EOF'
           set -e
+
           cd /var/www/bmc
 
-          echo ">>> 🔄 Ensuring remote 'bmc-backend' exists"
-          if ! git remote | grep -q bmc-backend; then
-            git remote add bmc-backend git@github.com:Sabbirbracu/bmc_backend.git
-          fi
+          echo ">>> Pulling latest code from bmc-backend repository"
+          git remote set-url origin git@github.com:Sabbirbracu/bmc_backend.git
+          git fetch origin Sabbir_merge
+          git reset --hard origin/Sabbir_merge
 
-          echo ">>> 🔄 Fetching latest code from Sabbir_merge branch"
-          git fetch bmc-backend Sabbir_merge
-          git reset --hard bmc-backend/Sabbir_merge
-          git clean -fd
-
-          echo ">>> 🔍 Ensuring .env file exists"
+          echo ">>> Ensuring .env exists"
           if [ ! -f .env ]; then
             cp .env.example .env
-            echo ".env file created from example"
+            echo ".env created from example"
           fi
 
-          echo ">>> 🧰 Installing Composer dependencies"
-          composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+          echo ">>> Installing Composer dependencies"
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-          echo ">>> 🧹 Running Laravel optimizations"
-          php artisan migrate --force || echo "⚠️ Migration failed or already up-to-date"
+          echo ">>> Running Laravel migrations & optimizations"
+          php artisan migrate --force
           php artisan config:clear
           php artisan cache:clear
           php artisan route:cache
           php artisan view:cache
           php artisan optimize
 
-          echo ">>> 🔒 Fixing permissions"
+          echo ">>> Fixing permissions"
           chown -R www-data:www-data /var/www/bmc
           chmod -R 775 /var/www/bmc
           find /var/www/bmc -type d -exec chmod g+s {} \;
 
-          echo ">>> 🔁 Reloading PHP and Nginx services"
+          echo ">>> Reloading services"
           systemctl reload php8.2-fpm || systemctl restart php8.2-fpm
           systemctl reload nginx || systemctl restart nginx
 
-          echo ">>> 🔎 Health check"
-          curl -Is http://localhost | head -n 1 || echo "⚠️ Health check warning: please verify manually"
+          echo ">>> Checking site health"
+          curl -Is http://localhost | head -n 1
 
-          echo ">>> ✅ Deployment completed successfully!"
+          echo ">>> ✅ Deployment successful!"
           EOF
