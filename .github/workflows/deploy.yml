@@ -3,7 +3,7 @@ name: 🚀 Deploy Laravel to Hostinger VPS
 on:
   push:
     branches:
-      - Sabbir_merge # 👈 your current working branch
+      - Sabbir_merge # Your working branch
 
 jobs:
   deploy:
@@ -18,10 +18,11 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
-      - name: 🧱 Add Server to known_hosts
+      - name: 🧱 Add VPS and GitHub to known_hosts
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H 193.168.195.68 >> ~/.ssh/known_hosts
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 
       - name: 🚀 Deploy Laravel App to VPS
         run: |
@@ -29,17 +30,17 @@ jobs:
           set -e
           cd /var/www/bmc
 
-          echo ">>> 🔄 Fetching latest code from Sabbir_merge branch"
-          # Ensure correct remote is used
+          echo ">>> 🔄 Ensuring remote 'bmc-backend' exists"
           if ! git remote | grep -q bmc-backend; then
-            git remote add bmc-backend git@github.com:mazharulhaqueemon/bmc.git
+            git remote add bmc-backend git@github.com:Sabbirbracu/bmc_backend.git
           fi
 
+          echo ">>> 🔄 Fetching latest code from Sabbir_merge branch"
           git fetch bmc-backend Sabbir_merge
           git reset --hard bmc-backend/Sabbir_merge
           git clean -fd
 
-          echo ">>> 🔍 Checking .env file"
+          echo ">>> 🔍 Ensuring .env file exists"
           if [ ! -f .env ]; then
             cp .env.example .env
             echo ".env file created from example"
@@ -61,7 +62,7 @@ jobs:
           chmod -R 775 /var/www/bmc
           find /var/www/bmc -type d -exec chmod g+s {} \;
 
-          echo ">>> 🔁 Restarting PHP and Nginx services"
+          echo ">>> 🔁 Reloading PHP and Nginx services"
           systemctl reload php8.2-fpm || systemctl restart php8.2-fpm
           systemctl reload nginx || systemctl restart nginx
 
