@@ -96,4 +96,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/me', [UserController::class, 'me']);
+    Route::get('/user/{id}', [ProfileController::class, 'getFullUserProfile']);
 });

@@ -56,6 +56,12 @@ public function partnerPreference()
     return $this->hasOne(PartnerPreference::class);
 }
 
+public function photos()
+{
+    return $this->hasMany(ProfilePicture::class, 'user_id', 'user_id');
+}
+
+
 
 
 }

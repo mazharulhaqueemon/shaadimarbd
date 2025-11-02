@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class UserController extends Controller
 {
@@ -56,4 +57,56 @@ class UserController extends Controller
             ],
         ]);
     }
+
+
+    public function fullProfile( $id)
+    {
+        $user = User::with([
+            'profile.education',
+            'profile.career',
+            'profile.familyDetail',
+            'profile.location',
+            'profile.lifestyle',
+            'profile.partnerPreference',
+            'profile.photos',
+        ])->find($id);
+
+        if (!$user || !$user->profile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User or Profile not found',
+                'data' => null,
+            ], 404);
+        }
+
+        $profile = $user->profile;
+
+        $response = [
+            'id' => $profile->id,
+            'user_id' => $user->id,
+            'gender' => $profile->gender,
+            'dob' => $profile->dob,
+            'religion' => $profile->religion,
+            'bio' => $profile->bio,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+            'education' => $profile->education ?? null,
+            'career' => $profile->career ?? null,
+            'family_detail' => $profile->familyDetail ?? null,
+            'location' => $profile->location ?? null,
+            'lifestyle' => $profile->lifestyle ?? null,
+            'partner_preference' => $profile->partnerPreference ?? null,
+            'photos' => $profile->photos ?? [],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User full profile retrieved successfully',
+            'data' => $response,
+        ]);
+    }
+
 }
