@@ -281,6 +281,8 @@ class ProfileController extends Controller
                     'id' => $profile->user->id,
                     'name' => $profile->user->name,
                     'email' => $profile->user->email,
+                    'phone_number' => $profile->user->phone_number,
+
                 ],
                 'education' => $profile->education->first() ?? null,
                 'career' => $profile->career->first() ?? null,
