@@ -62,7 +62,7 @@ class ProfileController extends Controller
             'user_id'        => 'required|exists:users,id',
             'gender'         => 'required|in:male,female,other',
             'dob'            => 'nullable|date',
-            'marital_status' => 'nullable|in:never_married,divorced,widow,separated',
+            'marital_status' => 'nullable|in:UnMarried,divorced,widow,separated',
             'height_feet'    => 'nullable|numeric',
             'weight_kg'      => 'nullable|integer',
             'blood_group'    => 'nullable|in:A+,A-,B+,B-,O+,O-,AB+,AB-',
@@ -86,7 +86,7 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'gender' => 'sometimes|in:male,female,other',
             'dob' => 'nullable|date',
-            'marital_status' => 'nullable|in:never_married,divorced,widow,separated',
+            'marital_status' => 'nullable|in:UnMarried,divorced,widow,separated',
             'height_feet' => 'nullable|numeric',
             'weight_kg' => 'nullable|integer',
             'blood_group' => 'nullable|in:A+,A-,B+,B-,O+,O-,AB+,AB-',
@@ -110,30 +110,40 @@ class ProfileController extends Controller
 
     public function advancedSearch(Request $request)
     {
+        // -------------------------
+        // Validate mandatory parameters
+        // -------------------------
+        $request->validate([
+            'gender' => 'required|string',
+            'marital_status' => 'required|string',
+            'religion' => 'required|string',
+            'age_from' => 'required|integer|min:18',
+            'age_to' => 'required|integer|gte:age_from',
+        ], [
+            'gender.required' => 'Gender is required.',
+            'marital_status.required' => 'Marital status is required.',
+            'religion.required' => 'Religion is required.',
+            'age_from.required' => 'Age range is required.',
+            'age_to.required' => 'Age range is required.',
+        ]);
+
         $query = Profile::query();
 
         // -------------------------
-        // Basic profile filters
+        // Mandatory filters
         // -------------------------
-        if ($request->filled('gender')) {
-            $query->where('gender', $request->gender);
-        }
+        $query->where('gender', $request->gender)
+            ->where('marital_status', $request->marital_status)
+            ->where('religion', $request->religion);
 
-        if ($request->filled('marital_status')) {
-            $query->where('marital_status', $request->marital_status);
-        }
+        // Correct dob-based age filtering
+        $from = now()->subYears($request->age_to)->startOfDay();
+        $to   = now()->subYears($request->age_from)->endOfDay();
+        $query->whereBetween('dob', [$from, $to]);
 
-        if ($request->filled('age_from') && $request->filled('age_to')) {
-            $query->whereBetween('dob', [
-                now()->subYears($request->age_to),
-                now()->subYears($request->age_from)
-            ]);
-        }
-
-        if ($request->filled('religion')) {
-            $query->where('religion', $request->religion);
-        }
-
+        // -------------------------
+        // Optional filters
+        // -------------------------
         if ($request->filled('caste')) {
             $query->where('caste', $request->caste);
         }
@@ -142,9 +152,7 @@ class ProfileController extends Controller
             $query->where('sub_caste', $request->sub_caste);
         }
 
-        // -------------------------
         // Location filters
-        // -------------------------
         if ($request->filled('country') || $request->filled('state') || $request->filled('city')) {
             $query->whereHas('location', function ($q) use ($request) {
                 if ($request->filled('country')) $q->where('country', $request->country);
@@ -153,9 +161,7 @@ class ProfileController extends Controller
             });
         }
 
-        // -------------------------
         // Education filters
-        // -------------------------
         if ($request->filled('degree') || $request->filled('university') || $request->filled('college')) {
             $query->whereHas('education', function ($q) use ($request) {
                 if ($request->filled('degree')) $q->where('highest_degree', $request->degree);
@@ -164,9 +170,7 @@ class ProfileController extends Controller
             });
         }
 
-        // -------------------------
         // Career filters
-        // -------------------------
         if ($request->filled('occupation') || $request->filled('annual_income')) {
             $query->whereHas('career', function ($q) use ($request) {
                 if ($request->filled('occupation')) $q->where('occupation', $request->occupation);
@@ -174,9 +178,7 @@ class ProfileController extends Controller
             });
         }
 
-        // -------------------------
         // Lifestyle filters
-        // -------------------------
         if ($request->filled('diet') || $request->filled('smoking') || $request->filled('drinking')) {
             $query->whereHas('lifestyle', function ($q) use ($request) {
                 if ($request->filled('diet')) $q->where('diet', $request->diet);
@@ -185,9 +187,7 @@ class ProfileController extends Controller
             });
         }
 
-        // -------------------------
         // Family details filters
-        // -------------------------
         if ($request->filled('family_status') || $request->filled('siblings_count')) {
             $query->whereHas('familyDetail', function ($q) use ($request) {
                 if ($request->filled('family_status')) $q->where('family_status', $request->family_status);
@@ -195,9 +195,7 @@ class ProfileController extends Controller
             });
         }
 
-        // -------------------------
-        // Partner preferences filters (optional)
-        // -------------------------
+        // Partner preferences filters
         if ($request->filled('preferred_religion') || $request->filled('preferred_marital_status')) {
             $query->whereHas('partnerPreference', function ($q) use ($request) {
                 if ($request->filled('preferred_religion')) $q->where('religion', $request->preferred_religion);
@@ -214,27 +212,47 @@ class ProfileController extends Controller
             'career',
             'lifestyle',
             'familyDetail',
-            'partnerPreference'
+            'partnerPreference',
+            'user.primaryProfilePicture',
         ])->paginate(20);
 
-        if ($profiles->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No profiles found',
-                'data' => []
-            ], 404);
-        }
+        // -------------------------
+        // Transform & attach photo URL
+        // -------------------------
+        // Transform & attach photo URL + user name
+        $profiles->getCollection()->transform(function ($profile) {
+            $photo = $profile->user?->primaryProfilePicture;
+            $photoUrl = $photo ? asset('storage/' . $photo->image_path) : asset('images/default-avatar.png');
 
+            return [
+                'id' => $profile->id,
+                'user_id' => $profile->user_id,
+                'user_name' => $profile->user?->name ?? "User {$profile->user_id}", // ✅ Add user_name
+                'gender' => $profile->gender,
+                'dob' => $profile->dob,
+                'marital_status' => $profile->marital_status,
+                'religion' => $profile->religion,
+                'bio' => $profile->bio,
+                'photo' => $photoUrl,
+                'location' => $profile->location,
+                'education' => $profile->education,
+                'career' => $profile->career,
+                'lifestyle' => $profile->lifestyle,
+                'family_detail' => $profile->familyDetail,
+                'partner_preference' => $profile->partnerPreference,
+            ];
+        });
+
+
+        // -------------------------
+        // Response
+        // -------------------------
         return response()->json([
             'success' => true,
             'message' => 'Profiles retrieved successfully',
-            'data' => $profiles
+            'data' => $profiles, // ✅ return paginator directly
         ]);
-
-
-
     }
-
 
     public function getFullUserProfile($userId)
     {
@@ -274,6 +292,7 @@ class ProfileController extends Controller
                 'id' => $profile->id,
                 'user_id' => $profile->user_id,
                 'gender' => $profile->gender,
+                'marital_status' => $profile->marital_status,
                 'dob' => $profile->dob,
                 'religion' => $profile->religion,
                 'bio' => $profile->bio,

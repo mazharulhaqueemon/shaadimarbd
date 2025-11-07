@@ -20,6 +20,9 @@ class Profile extends Model
         'caste',
         'sub_caste',
         'bio',
+        'profile_completion', // ✅ new
+        'last_completed_step', // ✅ new
+
     ];
     public function user()
 {

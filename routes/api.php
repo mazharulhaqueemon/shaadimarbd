@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PostController;
 use App\Http\Controllers\API\ForgotPasswordController;
+use App\Http\Controllers\Api\ProfileProgressController;
 
 use App\Http\Controllers\API\FirebaseController;
 use App\Http\Controllers\API\ChatController;
@@ -63,11 +64,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('profile-pictures/{id}/primary', [ProfilePictureController::class, 'setPrimary']);
 });
 
+// Temporarily move this outside middleware
+Route::post('/profiles/search', [ProfileController::class, 'advancedSearch']);
+
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payment/submit', [PaymentController::class, 'submit']);
 
     Route::get('/payment/user', [PaymentController::class, 'userPayments']);
-    Route::get('profiles/search', [ProfileController::class, 'advancedSearch']);
+    // Route::post('/profiles/search', [ProfileController::class, 'advancedSearch']);
 
     Route::get('profiles/user/{user_id}', [ProfileController::class, 'showByUser']);
     Route::get('educations/profile/{profile_id}', [EducationController::class, 'showByProfile']);
@@ -97,4 +102,12 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/me', [UserController::class, 'me']);
     Route::get('/user/{id}', [ProfileController::class, 'getFullUserProfile']);
+});
+
+
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/profile/progress', [ProfileProgressController::class, 'getProgress']);
+    Route::post('/profile/progress/update', [ProfileProgressController::class, 'updateProgress']);
 });
