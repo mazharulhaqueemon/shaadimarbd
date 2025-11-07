@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PostController;
 use App\Http\Controllers\API\ForgotPasswordController;
-use App\Http\Controllers\Api\ProfileProgressController;
+use App\Http\Controllers\API\ProfileProgressController;
 
 use App\Http\Controllers\API\FirebaseController;
 use App\Http\Controllers\API\ChatController;
