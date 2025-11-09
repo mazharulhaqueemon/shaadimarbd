@@ -14,54 +14,69 @@ class AuthController extends Controller
     
     // Register a new user
     
-    public function signup(SignupRequest $request){
-        
-        $freePlan = Plan::firstOrCreate(
-            ['plan_name' => 'Free'], 
-            [
-                'profile_picture_limit' => 1,
-                'phone_request_limit' => 2,
-                'chat_duration_days' => 0,
-                'description' => 'Default free plan',
-            ]
-        );
+    public function signup(SignupRequest $request)
+{
+    // Fetch the existing 'Basics' plan
+    $basicPlan = Plan::where('plan_name', 'Basics')->first();
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => $request->password, 
-            'account_created_by' => $request->account_created_by,
-            'phone_number' => $request->phone_number ?? null, 
-            'plan_id' => $freePlan->id, 
-        ]);
-
+    if (!$basicPlan) {
         return response()->json([
-            'status' => true,
-            'message' => 'User created successfully',
-            'data' => $user,
-        ], 201);
+            'status' => false,
+            'message' => 'Default plan not found. Please contact support.',
+        ], 500);
     }
+
+    // Create the user and assign the Basics plan
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => bcrypt($request->password), // Always hash passwords
+        'account_created_by' => $request->account_created_by,
+        'phone_number' => $request->phone_number ?? null,
+        'plan_id' => $basicPlan->id,
+    ]);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'User created successfully',
+        'data' => $user,
+    ], 201);
+}
+
 
     
     // Authenticate user and generate Laravel Sanctum token
-     
-    public function login(LoginRequest $request){
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-            $user = Auth::user();
 
-            return response()->json([
-                'status' => true,
-                'message' => 'User logged in successfully',
-                'data' => $user,
-                'token' => $user->createToken('auth_token')->plainTextToken,
-                'token_type' => 'Bearer',
-            ], 200);
-        }
+    public function login(LoginRequest $request){
+    if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+        $user = Auth::user();
+
+        // Make sure the user has a profile relationship
+        $profileId = $user->profile?->id ?? null;
+
         return response()->json([
-            'status' => false,
-            'message' => 'Authentication Failed',
-        ], 401);
+            'status' => true,
+            'message' => 'User logged in successfully',
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'profile_id' => $profileId, // ✅ include profile ID
+                'plan' => $user->plan,
+                'account_created_by' => $user->account_created_by,
+            ],
+            'token' => $user->createToken('auth_token')->plainTextToken,
+            'token_type' => 'Bearer',
+        ], 200);
     }
+
+    return response()->json([
+        'status' => false,
+        'message' => 'Authentication Failed',
+    ], 401);
+}
+
 
     
     // Logout and revoke tokens

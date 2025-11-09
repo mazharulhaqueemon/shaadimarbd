@@ -41,6 +41,7 @@ class UserController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone_number' => $user->phone_number,
+                'profile_id' => $user->profile->id ?? null,
                 'plan' => [
                     'plan_name' => $user->plan->plan_name ?? null,
                     'description' => $user->plan->description ?? null,
