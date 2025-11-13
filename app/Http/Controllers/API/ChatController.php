@@ -115,7 +115,6 @@ public function conversations()
 
 
         // 🔥 Broadcast event (Reverb will handle this later)
-        // broadcast(new MessageSent($message))->toOthers();
 
         broadcast(new MessageSent($message))->toOthers();
         \Log::info('[Broadcast] MessageSent event dispatched', [
@@ -123,7 +122,7 @@ public function conversations()
             'receiver_id' => $receiverId,
             'conversation_id' => $conversation->id,
         ]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Message sent successfully.',

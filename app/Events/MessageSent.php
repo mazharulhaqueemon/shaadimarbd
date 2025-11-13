@@ -59,16 +59,20 @@ class MessageSent implements ShouldBroadcast
             'content' => $this->message->content ?? '[no content field]',
         ]);
     }
-
+    
     public function broadcastOn()
-    {
-        $channelName = 'chat.' . $this->message->receiver_id;
-        Log::info('🚀 Broadcasting MessageSent to channel', [
-            'channel' => $channelName,
-            'event' => 'message.sent',
-        ]);
-        return new PrivateChannel($channelName);
-    }
+{
+    $channels = [
+        new PrivateChannel('chat.' . $this->message->receiver_id),
+        new PrivateChannel('chat.' . $this->message->sender_id), // add sender channel
+    ];
+    Log::info('🚀 Broadcasting MessageSent to channels', [
+        'channels' => $channels,
+        'event' => 'message.sent',
+    ]);
+    return $channels;
+}
+
 
     public function broadcastAs()
     {

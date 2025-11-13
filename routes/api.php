@@ -110,9 +110,48 @@ Route::middleware('auth:sanctum')->group(function () {
 // Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 
-Route::middleware('auth:sanctum')->group(function () {
+// Route::middleware('auth:sanctum')->group(function () {
 
-    Route::post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
-        return Broadcast::auth($request);
-    });
+//     Route::post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
+//         return Broadcast::auth($request);
+//     });
+// });
+
+
+Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Request $request) {
+    \Log::info('🔐 ===== BROADCAST AUTH REQUEST =====');
+    \Log::info('🔐 Headers:', $request->headers->all());
+    \Log::info('🔐 Channel Name:', ['channel' => $request->channel_name]);
+    \Log::info('🔐 Socket ID:', ['socket_id' => $request->socket_id]);
+    \Log::info('🔐 User ID:', ['user_id' => $request->user()?->id]);
+    \Log::info('🔐 All Input:', $request->all());
+
+    // Check if user is authenticated
+    if (!$request->user()) {
+        \Log::error('❌ User not authenticated');
+        return response()->json(['error' => 'Unauthenticated'], 401);
+    }
+
+    // Check if we have the required parameters
+    if (!$request->channel_name || !$request->socket_id) {
+        \Log::error('❌ Missing required parameters', [
+            'has_channel' => !empty($request->channel_name),
+            'has_socket_id' => !empty($request->socket_id)
+        ]);
+        return response()->json(['error' => 'Channel name and socket ID required'], 400);
+    }
+
+    try {
+        \Log::info('🔐 Calling Broadcast::auth()');
+        $result = Broadcast::auth($request);
+        \Log::info('🔐 Broadcast::auth() result type:', ['type' => gettype($result)]);
+        
+        return $result;
+    } catch (\Exception $e) {
+        \Log::error('❌ Broadcast auth exception', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json(['error' => 'Authorization failed: ' . $e->getMessage()], 403);
+    }
 });
