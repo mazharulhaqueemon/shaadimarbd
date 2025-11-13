@@ -6,7 +6,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PostController;
 use App\Http\Controllers\API\ForgotPasswordController;
 use App\Http\Controllers\API\ProfileProgressController;
-
+use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\API\FirebaseController;
 use App\Http\Controllers\API\ChatController;
 use App\Http\Controllers\API\PlanController;
@@ -33,11 +33,6 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::get('/verify-firebase-token', [FirebaseController::class, 'verifyFirebaseToken']);
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
-    Route::get('/chat/history/{receiverId}', [ChatController::class, 'getChatHistory']);
-});
 
 
 Route::get('/plans/public', [PlanController::class, 'index']); 
@@ -92,22 +87,32 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/chat/list', [ChatListController::class, 'index']);
-    Route::post('/chat/list', [ChatListController::class, 'store']);
-});
-
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/me', [UserController::class, 'me']);
     Route::get('/user/{id}', [ProfileController::class, 'getFullUserProfile']);
 });
 
 
-
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/progress', [ProfileProgressController::class, 'getProgress']);
     Route::post('/profile/progress/update', [ProfileProgressController::class, 'updateProgress']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/chat/conversations', [ChatController::class, 'conversations']);
+    Route::get('/chat/messages/{otherUserId}', [ChatController::class, 'messages']);
+    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+});
+
+
+
+
+// Broadcast::routes(['middleware' => ['auth:sanctum']]);
+
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
+        return Broadcast::auth($request);
+    });
 });
