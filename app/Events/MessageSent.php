@@ -1,39 +1,5 @@
 <?php
 
-// namespace App\Events;
-
-// use App\Models\Message;
-// use Illuminate\Broadcasting\Channel;
-// use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-// use Illuminate\Broadcasting\InteractsWithSockets;
-// use Illuminate\Queue\SerializesModels;
-// use Illuminate\Broadcasting\PrivateChannel;
-
-
-// class MessageSent implements ShouldBroadcast
-// {
-//     use InteractsWithSockets, SerializesModels;
-
-//     public $message;
-
-//     public function __construct(Message $message)
-//     {
-//         $this->message = $message->load(['sender:id,name', 'receiver:id,name']);
-//     }
-
-//     public function broadcastOn()
-//     {
-//         \Log::info('Broadcasting to channel: chat.' . $this->message->receiver_id);
-//         return new PrivateChannel('chat.' . $this->message->receiver_id);
-//     }
-
-//     public function broadcastAs()
-//     {
-//         return 'message.sent';
-//     }
-// }
-
-
 namespace App\Events;
 
 use App\Models\Message;
@@ -59,12 +25,12 @@ class MessageSent implements ShouldBroadcast
             'content' => $this->message->content ?? '[no content field]',
         ]);
     }
-    
+
     public function broadcastOn()
 {
     $channels = [
         new PrivateChannel('chat.' . $this->message->receiver_id),
-        new PrivateChannel('chat.' . $this->message->sender_id), // add sender channel
+        new PrivateChannel('chat.' . $this->message->sender_id), 
     ];
     Log::info('🚀 Broadcasting MessageSent to channels', [
         'channels' => $channels,
