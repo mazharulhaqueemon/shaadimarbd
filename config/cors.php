@@ -10,7 +10,7 @@ return [
     'allowed_origins' => [
         'https://www.shaadimartbd.com',
         'https://shaadimartbd.com',
-        'http://api.shaadimartbd.com',  # Your API domain
+        'https://api.shaadimartbd.com',  # Your API domain
         'http://localhost:3000',
     ],
 
