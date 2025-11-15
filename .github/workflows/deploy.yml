@@ -118,21 +118,10 @@ jobs:
           git fetch origin Sabbir_merge
           git reset --hard origin/Sabbir_merge
 
-          echo ">>> Ensuring .env exists and has correct API domain"
+          echo ">>> Ensuring .env exists"
           if [ ! -f .env ]; then
             cp .env.example .env
             echo ".env created from example"
-          fi
-
-          # Update .env with correct domain if needed
-          if grep -q "APP_URL=http://193.168.195.68" .env; then
-            sed -i 's|APP_URL=http://193.168.195.68|APP_URL=http://api.shaadimartbd.com|g' .env
-            echo "Updated APP_URL in .env"
-          fi
-
-          if grep -q "REVERB_HOST=193.168.195.68" .env; then
-            sed -i 's|REVERB_HOST=193.168.195.68|REVERB_HOST=api.shaadimartbd.com|g' .env
-            echo "Updated REVERB_HOST in .env"
           fi
 
           echo ">>> Installing Composer dependencies"
@@ -146,82 +135,17 @@ jobs:
           php artisan view:cache
           php artisan optimize
 
-          echo ">>> Updating Nginx configuration for subdomain"
-          # Backup current nginx config
-          sudo cp /etc/nginx/sites-available/bmc /etc/nginx/sites-available/bmc.backup.$(date +%Y%m%d_%H%M%S)
-          
-          # Create updated nginx config
-          sudo cat > /tmp/bmc_nginx_config.conf << 'NGINXCONFIG'
-          server {
-              listen 80;
-              server_name 193.168.195.68 api.shaadimartbd.com;
-
-              root /var/www/bmc/public;
-              index index.php index.html index.htm;
-
-              add_header X-Frame-Options "SAMEORIGIN";
-              add_header X-Content-Type-Options "nosniff";
-
-              charset utf-8;
-              client_max_body_size 100M;
-
-              location / {
-                  try_files $uri $uri/ /index.php?$query_string;
-              }
-
-              # WebSocket proxy for Reverb
-              location /ws {
-                  proxy_pass http://127.0.0.1:6001;
-                  proxy_http_version 1.1;
-                  proxy_set_header Upgrade $http_upgrade;
-                  proxy_set_header Connection "Upgrade";
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-                  proxy_read_timeout 86400;
-              }
-
-              location = /favicon.ico { access_log off; log_not_found off; }
-              location = /robots.txt  { access_log off; log_not_found off; }
-
-              error_page 404 /index.php;
-
-              location ~ \.php$ {
-                  include snippets/fastcgi-php.conf;
-                  fastcgi_pass unix:/run/php/php8.3-fpm.sock;
-                  fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-                  include fastcgi_params;
-              }
-
-              location ~ /\.(?!well-known).* {
-                  deny all;
-              }
-          }
-          NGINXCONFIG
-
-          # Move the config to the proper location
-          sudo mv /tmp/bmc_nginx_config.conf /etc/nginx/sites-available/bmc
-
-          echo ">>> Testing Nginx configuration"
-          sudo nginx -t
-
           echo ">>> Fixing permissions for web server"
           sudo chown -R www-data:www-data /var/www/bmc
           sudo chmod -R 775 /var/www/bmc
           sudo find /var/www/bmc -type d -exec chmod g+s {} \;
-
-          echo ">>> Restarting Reverb service"
-          sudo supervisorctl restart reverb:*
 
           echo ">>> Reloading services"
           sudo systemctl reload php8.3-fpm || sudo systemctl restart php8.3-fpm
           sudo systemctl reload nginx || sudo systemctl restart nginx
 
           echo ">>> Checking site health"
-          echo "Testing API domain:"
-          curl -Is http://api.shaadimartbd.com | head -n 1 || echo "API domain check failed, testing IP:"
-          curl -Is http://193.168.195.68 | head -n 1
+          curl -Is http://localhost | head -n 1
 
           echo ">>> ✅ Deployment successful!"
           EOF
