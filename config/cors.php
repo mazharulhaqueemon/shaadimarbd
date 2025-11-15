@@ -2,12 +2,17 @@
 
 return [
 
-    'paths' => ['api/*', 'login', 'signup', 'user/*'],
+    'paths' => ['api/*', 'login', 'signup', 'user/*','broadcasting/auth',
+        'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://www.shaadimartbd.com/'],
- // Or your frontend URL: 'http://localhost:3000'
+    'allowed_origins' => [
+        'https://www.shaadimartbd.com',
+        'https://shaadimartbd.com',
+        'http://api.shaadimartbd.com',  # Your API domain
+        'http://localhost:3000',
+    ],
 
     'allowed_origins_patterns' => [],
 
