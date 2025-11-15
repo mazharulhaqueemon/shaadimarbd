@@ -36,7 +36,7 @@ return [
                 'app_id' => env('REVERB_APP_ID'),
                 'options' => [
                     'host' => env('REVERB_HOST', 'api.shaadimartbd.com'),
-                    'port' => env('REVERB_PORT', 6001), // ✅ Frontend connects to 443
+                    'port' => env('REVERB_PORT', 443), // ✅ Frontend connects to 443
                     'scheme' => env('REVERB_SCHEME', 'https'), // ✅ Use HTTPS
                     'useTLS' => env('REVERB_SCHEME', 'https') === 'https', // ✅ Enable TLS
                 ],
