@@ -7,7 +7,7 @@ return [
     'reverb' => [
         'host' => '0.0.0.0',
         'port' => 6001, // Hardcoded
-        'path' => '',
+        'path' => '/ws',
         'hostname' => 'api.shaadimartbd.com',
         'options' => [
             'tls' => [],
