@@ -20,7 +20,7 @@ use App\Http\Controllers\API\LifestyleController;
 use App\Http\Controllers\API\PartnerPreferenceController;
 use App\Http\Controllers\API\ProfilePictureController;
 use App\Http\Controllers\API\PaymentController;
-use App\Http\Controllers\Api\TrackPhoneRequestController;
+use App\Http\Controllers\API\TrackPhoneRequestController;
 use App\Http\Controllers\API\ChatListController;
 use App\Http\Controllers\API\UserController;
 
