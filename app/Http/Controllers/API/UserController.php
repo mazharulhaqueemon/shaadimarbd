@@ -18,7 +18,7 @@ class UserController extends Controller
     {
         $user = Auth::user()->load('plan', 'profilePictures');
 
-        // Get primary profile picture
+        // Get primary profile picture.  
         $primaryPicture = $user->profilePictures()->where('is_primary', true)->first();
 
         // Log primary picture info
