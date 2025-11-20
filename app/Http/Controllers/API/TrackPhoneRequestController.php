@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\API;
-
 use App\Http\Controllers\Controller;
 use App\Models\TrackPhoneRequest;
 use Illuminate\Http\Request;
@@ -10,20 +9,6 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 class TrackPhoneRequestController extends Controller
 {
-    /**
-     * POST /api/track-phone-request
-     * Body: { viewed_profile_id: integer }
-     *
-     * Returns JSON:
-     * {
-     *   success: true/false,
-     *   current_count: int,
-     *   limit: int,
-     *   allowed: bool,
-     *   message: string
-     * }
-     */
-    
 
 public function store(Request $request)
 {
