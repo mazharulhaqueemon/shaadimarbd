@@ -106,18 +106,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-
-// Broadcast::routes(['middleware' => ['auth:sanctum']]);
-
-
-// Route::middleware('auth:sanctum')->group(function () {
-
-//     Route::post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
-//         return Broadcast::auth($request);
-//     });
-// });
-
-
 Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Request $request) {
     \Log::info('🔐 ===== BROADCAST AUTH REQUEST =====');
     \Log::info('🔐 Headers:', $request->headers->all());
