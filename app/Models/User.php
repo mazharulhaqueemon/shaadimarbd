@@ -13,6 +13,8 @@ use App\Models\Payment;
 use App\Models\Profile;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use App\Models\TrackPhoneRequest;
+
 
 
 
@@ -102,6 +104,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasOne(Profile::class);
     }
 
+    public function phoneTrack()
+    {
+    return $this->hasOne(TrackPhoneRequest::class, 'viewer_user_id');
+    }
+
 
 
     // Automatically assign Free Plan on creation if plan_id is empty
@@ -110,6 +117,15 @@ class User extends Authenticatable implements FilamentUser
             if (empty($user->plan_id)) {
                 $user->plan_id = 1; // Free Plan has ID = 1
             }
+        });
+        
+        // After the user is created → create phone tracking row
+        static::created(function ($user) {
+            TrackPhoneRequest::create([
+                'viewer_user_id' => $user->id,
+                'viewed_profile_ids' => json_encode([]),
+                'count' => 0,
+            ]);
         });
     }
 }

@@ -20,7 +20,7 @@ use App\Http\Controllers\API\LifestyleController;
 use App\Http\Controllers\API\PartnerPreferenceController;
 use App\Http\Controllers\API\ProfilePictureController;
 use App\Http\Controllers\API\PaymentController;
-
+use App\Http\Controllers\Api\TrackPhoneRequestController;
 use App\Http\Controllers\API\ChatListController;
 use App\Http\Controllers\API\UserController;
 
@@ -154,4 +154,11 @@ Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Request 
         ]);
         return response()->json(['error' => 'Authorization failed: ' . $e->getMessage()], 403);
     }
+});
+
+
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/track-phone-request/stats', [TrackPhoneRequestController::class, 'stats']);
+    Route::post('/track-phone-request', [TrackPhoneRequestController::class, 'store']);
 });
