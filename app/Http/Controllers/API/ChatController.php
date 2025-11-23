@@ -151,10 +151,6 @@ class ChatController extends Controller
      */
     public function conversations()
     {
-        Log::info('💬 [ChatController] Fetching conversations', [
-            'user_id' => Auth::id()
-        ]);
-
         $userId = Auth::id();
 
         $conversations = Conversation::where('user_one_id', $userId)
@@ -187,11 +183,6 @@ class ChatController extends Controller
                 ];
             });
 
-        Log::info('✅ [ChatController] Conversations fetched successfully', [
-            'user_id' => $userId,
-            'conversations_count' => $conversations->count()
-        ]);
-
         return response()->json($conversations);
     }
 
@@ -200,20 +191,11 @@ class ChatController extends Controller
      */
     public function messages($otherUserId)
     {
-        Log::info('💬 [ChatController] Fetching messages', [
-            'current_user_id' => Auth::id(),
-            'other_user_id' => $otherUserId
-        ]);
-
         $userId = Auth::id();
 
         $conversation = Conversation::between($userId, $otherUserId)->first();
 
         if (!$conversation) {
-            Log::info('ℹ️ [ChatController] No conversation found', [
-                'user_id' => $userId,
-                'other_user_id' => $otherUserId
-            ]);
             return response()->json(['messages' => []]);
         }
 
@@ -221,38 +203,21 @@ class ChatController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        // Mark unread messages as read
-        $unreadUpdated = Message::where('conversation_id', $conversation->id)
+        // Optionally mark unread messages as read
+        Message::where('conversation_id', $conversation->id)
             ->where('receiver_id', $userId)
             ->whereNull('read_at')
             ->update(['status' => 'read', 'read_at' => now()]);
-
-        if ($unreadUpdated > 0) {
-            Log::info('📖 [ChatController] Marked messages as read', [
-                'conversation_id' => $conversation->id,
-                'unread_count' => $unreadUpdated
-            ]);
-        }
-
-        Log::info('✅ [ChatController] Messages fetched successfully', [
-            'conversation_id' => $conversation->id,
-            'messages_count' => $messages->count(),
-            'unread_updated' => $unreadUpdated
-        ]);
 
         return response()->json($messages);
     }
 
     /**
-     * Send a new message to another user
+     * Send a new message to another user - WITHOUT QUEUE
      */
     public function sendMessage(Request $request)
     {
-        Log::info('✉️ [ChatController] sendMessage called', [
-            'sender_id' => Auth::id(),
-            'receiver_id' => $request->receiver_id,
-            'message_length' => strlen($request->message)
-        ]);
+        Log::info('🚀 [ChatController] sendMessage called - Testing without queue');
 
         $validator = Validator::make($request->all(), [
             'receiver_id' => 'required|integer|exists:users,id',
@@ -260,30 +225,15 @@ class ChatController extends Controller
         ]);
 
         if ($validator->fails()) {
-            Log::error('❌ [ChatController] Message validation failed', [
-                'errors' => $validator->errors()->toArray(),
-                'sender_id' => Auth::id()
-            ]);
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $senderId = Auth::id();
         $receiverId = $request->receiver_id;
 
-        Log::info('🔍 [ChatController] Finding or creating conversation', [
-            'sender_id' => $senderId,
-            'receiver_id' => $receiverId
-        ]);
-
         // Ensure one consistent conversation per pair
         $conversation = Conversation::getOrCreateBetween($senderId, $receiverId);
-        $conversation->touch(); // update updated_at
-
-        Log::info('💾 [ChatController] Creating message record', [
-            'conversation_id' => $conversation->id,
-            'sender_id' => $senderId,
-            'receiver_id' => $receiverId
-        ]);
+        $conversation->touch();
 
         // Create message record
         $message = Message::create([
@@ -294,46 +244,33 @@ class ChatController extends Controller
             'status' => 'sent',
         ]);
 
-        Log::info('✅ [ChatController] Message created successfully', [
+        Log::info('✅ [ChatController] Message created', [
             'message_id' => $message->id,
-            'conversation_id' => $conversation->id
+            'sender_id' => $senderId,
+            'receiver_id' => $receiverId
         ]);
 
         // Load relationships before broadcasting
-        Log::info('🔄 [ChatController] Loading message relationships', [
-            'message_id' => $message->id
-        ]);
-        
-        $message->load(['sender:id,name,email', 'receiver:id,name,email']);
-
-        Log::info('📡 [ChatController] Broadcasting MessageSent event', [
-            'message_id' => $message->id,
-            'sender_id' => $senderId,
-            'receiver_id' => $receiverId,
-            'channels' => ['chat.' . $receiverId, 'chat.' . $senderId]
-        ]);
+        $message->load(['sender:id,name', 'receiver:id,name']);
 
         try {
-            // Broadcast the event
-            broadcast(new MessageSent($message))->toOthers();
+            Log::info('🎯 [ChatController] Attempting IMMEDIATE broadcast (no queue)');
             
-            Log::info('🎉 [ChatController] MessageSent event broadcasted successfully', [
-                'message_id' => $message->id,
-                'broadcast_status' => 'queued'
-            ]);
+            // BROADCAST WITHOUT QUEUE - Method 1
+            event(new MessageSent($message));
+            
+            // OR Method 2 - Alternative approach
+            // broadcast(new MessageSent($message))->toOthers();
+            
+            Log::info('✅ [ChatController] Immediate broadcast completed successfully');
 
         } catch (\Exception $e) {
-            Log::error('❌ [ChatController] Failed to broadcast MessageSent event', [
-                'message_id' => $message->id,
+            Log::error('❌ [ChatController] Immediate broadcast FAILED', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'message_id' => $message->id
             ]);
         }
-
-        Log::info('🏁 [ChatController] sendMessage completed successfully', [
-            'message_id' => $message->id,
-            'response_sent' => true
-        ]);
 
         return response()->json([
             'success' => true,
