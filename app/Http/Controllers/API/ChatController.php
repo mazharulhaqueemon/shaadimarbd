@@ -215,67 +215,133 @@ class ChatController extends Controller
     /**
      * Send a new message to another user - WITHOUT QUEUE
      */
+    // public function sendMessage(Request $request)
+    // {
+    //     Log::info('🚀 [ChatController] sendMessage called - Testing without queue');
+
+    //     $validator = Validator::make($request->all(), [
+    //         'receiver_id' => 'required|integer|exists:users,id',
+    //         'message' => 'required|string|max:1000',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json(['errors' => $validator->errors()], 422);
+    //     }
+
+    //     $senderId = Auth::id();
+    //     $receiverId = $request->receiver_id;
+
+    //     // Ensure one consistent conversation per pair
+    //     $conversation = Conversation::getOrCreateBetween($senderId, $receiverId);
+    //     $conversation->touch();
+
+    //     // Create message record
+    //     $message = Message::create([
+    //         'conversation_id' => $conversation->id,
+    //         'sender_id' => $senderId,
+    //         'receiver_id' => $receiverId,
+    //         'message' => $request->message,
+    //         'status' => 'sent',
+    //     ]);
+
+    //     Log::info('✅ [ChatController] Message created', [
+    //         'message_id' => $message->id,
+    //         'sender_id' => $senderId,
+    //         'receiver_id' => $receiverId
+    //     ]);
+
+    //     // Load relationships before broadcasting
+    //     $message->load(['sender:id,name', 'receiver:id,name']);
+
+    //     try {
+    //         Log::info('🎯 [ChatController] Attempting IMMEDIATE broadcast (no queue)');
+            
+    //         // BROADCAST WITHOUT QUEUE - Method 1
+    //         event(new MessageSent($message));
+            
+    //         // OR Method 2 - Alternative approach
+    //         // broadcast(new MessageSent($message))->toOthers();
+            
+    //         Log::info('✅ [ChatController] Immediate broadcast completed successfully');
+
+    //     } catch (\Exception $e) {
+    //         Log::error('❌ [ChatController] Immediate broadcast FAILED', [
+    //             'error' => $e->getMessage(),
+    //             'trace' => $e->getTraceAsString(),
+    //             'message_id' => $message->id
+    //         ]);
+    //     }
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Message sent successfully.',
+    //         'data' => $message,
+    //     ]);
+    // }
+
     public function sendMessage(Request $request)
-    {
-        Log::info('🚀 [ChatController] sendMessage called - Testing without queue');
+{
+    Log::info('🔴 [ChatController] STEP 1 - sendMessage started', [
+        'sender_id' => Auth::id(),
+        'receiver_id' => $request->receiver_id
+    ]);
 
-        $validator = Validator::make($request->all(), [
-            'receiver_id' => 'required|integer|exists:users,id',
-            'message' => 'required|string|max:1000',
-        ]);
+    $validator = Validator::make($request->all(), [
+        'receiver_id' => 'required|integer|exists:users,id',
+        'message' => 'required|string|max:1000',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+    if ($validator->fails()) {
+        Log::error('❌ [ChatController] Validation failed', $validator->errors()->toArray());
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
 
-        $senderId = Auth::id();
-        $receiverId = $request->receiver_id;
+    Log::info('🔴 [ChatController] STEP 2 - Validation passed');
 
-        // Ensure one consistent conversation per pair
-        $conversation = Conversation::getOrCreateBetween($senderId, $receiverId);
-        $conversation->touch();
+    $senderId = Auth::id();
+    $receiverId = $request->receiver_id;
 
-        // Create message record
-        $message = Message::create([
-            'conversation_id' => $conversation->id,
-            'sender_id' => $senderId,
-            'receiver_id' => $receiverId,
-            'message' => $request->message,
-            'status' => 'sent',
-        ]);
+    $conversation = Conversation::getOrCreateBetween($senderId, $receiverId);
+    $conversation->touch();
+    
+    Log::info('🔴 [ChatController] STEP 3 - Conversation ready', [
+        'conversation_id' => $conversation->id
+    ]);
 
-        Log::info('✅ [ChatController] Message created', [
-            'message_id' => $message->id,
-            'sender_id' => $senderId,
-            'receiver_id' => $receiverId
-        ]);
+    $message = Message::create([
+        'conversation_id' => $conversation->id,
+        'sender_id' => $senderId,
+        'receiver_id' => $receiverId,
+        'message' => $request->message,
+        'status' => 'sent',
+    ]);
 
-        // Load relationships before broadcasting
-        $message->load(['sender:id,name', 'receiver:id,name']);
+    Log::info('🔴 [ChatController] STEP 4 - Message created', [
+        'message_id' => $message->id
+    ]);
 
-        try {
-            Log::info('🎯 [ChatController] Attempting IMMEDIATE broadcast (no queue)');
-            
-            // BROADCAST WITHOUT QUEUE - Method 1
-            event(new MessageSent($message));
-            
-            // OR Method 2 - Alternative approach
-            // broadcast(new MessageSent($message))->toOthers();
-            
-            Log::info('✅ [ChatController] Immediate broadcast completed successfully');
+    // Load relationships
+    $message->load(['sender:id,name', 'receiver:id,name']);
+    Log::info('🔴 [ChatController] STEP 5 - Relationships loaded');
 
-        } catch (\Exception $e) {
-            Log::error('❌ [ChatController] Immediate broadcast FAILED', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'message_id' => $message->id
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Message sent successfully.',
-            'data' => $message,
+    Log::info('🔴 [ChatController] STEP 6 - BEFORE event() call');
+    
+    try {
+        event(new MessageSent($message));
+        Log::info('✅ [ChatController] STEP 7 - event() call SUCCESS');
+    } catch (\Exception $e) {
+        Log::error('❌ [ChatController] STEP 7 - event() call FAILED', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ]);
     }
+
+    Log::info('🔴 [ChatController] STEP 8 - sendMessage completed');
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Message sent successfully.',
+        'data' => $message,
+    ]);
+}
 }
