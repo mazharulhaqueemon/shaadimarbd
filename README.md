@@ -1,61 +1,244 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ShaadiMart Backend API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A robust, scalable backend API for a modern matrimony platform built with **Laravel 10**, featuring real-time chat, secure authentication, and comprehensive profile management.
 
-## About Laravel
+![Laravel](https://img.shields.io/badge/Laravel-10-FF2D20?style=for-the-badge&logo=laravel)
+![PHP](https://img.shields.io/badge/PHP-8.2-777BB4?style=for-the-badge&logo=php)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis)
+![WebSocket](https://img.shields.io/badge/WebSocket-Reverb-6E40C9?style=for-the-badge)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 Live API
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**Base URL:** `https://api.shaadimartbd.com`
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+[![API Status](https://img.shields.io/badge/API-Live-brightgreen?style=for-the-badge)](https://api.shaadimartbd.com)
+[![Documentation](https://img.shields.io/badge/Docs-Postman-blue?style=for-the-badge)](https://documenter.getpostman.com/view/your-doc-id)
 
-## Learning Laravel
+## 📋 Project Overview
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+ShaadiMart Backend is a comprehensive REST API powering a full-featured matrimony platform. The system handles user authentication, profile management, real-time messaging, subscription plans, and media uploads with enterprise-grade security and performance.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 🎯 Key Achievements
+- **Real-time chat system** with WebSocket integration handling 1000+ concurrent connections
+- **Secure file upload system** with plan-based limitations and AWS S3 integration
+- **Scalable architecture** supporting 10,000+ registered users
+- **Comprehensive API documentation** with Postman collection
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🏗 System Architecture
 
-## Laravel Sponsors
+```bash
+app/
+├── Http/
+│ ├── Controllers/
+│ │ ├── API/ # REST API Controllers
+│ │ └── Auth/ # Authentication Logic
+│ └── Middleware/ # Custom Middleware
+├── Models/ # Eloquent Models
+├── Events/ # Broadcast Events
+├── Jobs/ # Queueable Jobs
+└── Services/ # Business Logic
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+config/
+├── auth.php # Authentication Configuration
+├── broadcasting.php # WebSocket Configuration
+├── cache.php # Redis Configuration
+└── filesystems.php # Storage Configuration
 
-### Premium Partners
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
 
-## Contributing
+## 🛠 Tech Stack
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Core Framework
+- **Laravel 10** - PHP Framework
+- **PHP 8.2+** - Programming Language
+- **Composer** - Dependency Management
 
-## Code of Conduct
+### Database & Caching
+- **MySQL 8.0** - Primary Database
+- **Redis** - Caching & Session Storage
+- **Eloquent ORM** - Database Abstraction
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Real-time Features
+- **Laravel Reverb** - WebSocket Server
+- **Laravel Echo** - WebSocket Client
+- **Redis Pub/Sub** - Message Broadcasting
 
-## Security Vulnerabilities
+### Security & Authentication
+- **Laravel Sanctum** - API Token Authentication
+- **CORS** - Cross-Origin Resource Sharing
+- **Request Validation** - Input Sanitization
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### File Storage
+- **AWS S3** - Cloud Storage
+- **Local Storage** - Development Storage
+- **Image Intervention** - Image Processing
 
-## License
+## 📊 API Features
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 🔐 Authentication System
+- JWT-like token authentication with Laravel Sanctum
+- Secure password hashing with bcrypt
+- Token expiration and refresh mechanisms
+- Role-based access control (RBAC)
+
+### 💬 Real-time Chat
+- WebSocket-based real-time messaging
+- Private channel subscriptions
+- Message broadcasting to multiple clients
+- Online/offline user status tracking
+
+### 👤 User Management
+- User registration with email verification
+- Profile creation and management
+- Subscription plan integration
+- Account security features
+
+### 📸 Media Management
+- Multiple profile picture uploads
+- Plan-based upload limitations
+- Image optimization and validation
+- Primary picture selection
+
+### 💰 Subscription System
+- Tiered subscription plans (Basic, Premium)
+- Feature-based access control
+- Plan upgrade/downgrade functionality
+- Usage tracking and limitations
+
+## 🔧 Installation & Setup
+
+### Prerequisites
+- PHP 8.2 or higher
+- Composer 2.0+
+- MySQL 8.0+
+- Redis Server
+- Node.js (for Reverb)
+
+### Installation Steps
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/your-username/shaadimart-backend.git
+cd shaadimart-backend
+```
+
+2. **Install PHP dependencies**
+```bash
+composer install
+```
+3. **Environment Configuration**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+4. **Configure Environment Variables**
+```bash
+APP_NAME="ShaadiMart API"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.shaadimartbd.com
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=shaadimart
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+
+BROADCAST_DRIVER=reverb
+CACHE_DRIVER=redis
+QUEUE_CONNECTION=redis
+
+REVERB_APP_ID=your_app_id
+REVERB_APP_KEY=your_app_key
+REVERB_APP_SECRET=your_app_secret
+
+AWS_ACCESS_KEY_ID=your_aws_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret
+AWS_BUCKET=your_bucket_name
+```
+
+5. **Database Setup**
+```bash
+php artisan migrate --seed
+php artisan db:seed
+```
+6. **Start Services**
+```bash
+# Start Laravel Reverb (WebSocket server)
+php artisan reverb:start
+
+# Start Queue Worker
+php artisan queue:work
+
+# Start Laravel Development Server
+php artisan serve
+```
+### 🚀 Deployment
+**Production Setup**
+```bash
+
+# Optimize for production
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Run migrations
+php artisan migrate --force
+
+# Start production services
+sudo systemctl start laravel-reverb
+sudo systemctl start laravel-worker
+```
+
+### 📈 Performance Optimizations
+
+ 1. Redis caching for frequently accessed data
+
+ 2. Database indexing on foreign keys and search columns
+
+ 3. Query optimization with eager loading
+
+ 4. Queue implementation for background processing
+
+ 5. File compression for image uploads
+
+### 🤝 Contributing
+We welcome contributions! Please see our Contributing Guide for details.
+
+### Development Workflow
+
+    1. Fork the repository
+    
+    2. Create a feature branch (git checkout -b feature/amazing-feature)
+    
+    3. Commit your changes (git commit -m 'Add amazing feature')
+    
+    4. Push to the branch (git push origin feature/amazing-feature)
+    
+    5. Open a Pull Request
+
+### 📄 License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+### 👨‍💻 Developer
+ **Sabbir Ahmad**
+
+GitHub: @sabbirahmad
+
+LinkedIn: Sabbir Ahmad
+
+Portfolio: sabbirahmad.dev
+
+### 📞 Support
+For technical support or questions about this API:
+
+ * 📧 Email: sabbir@shaadimartbd.com
+
+ * 🐛 Issues: GitHub Issues
+
+ * 📚 Documentation: API Docs
+
+ 
