@@ -228,14 +228,14 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 GitHub: @sabbirahmad
 
-LinkedIn: Sabbir Ahmad
+LinkedIn: Sabbir Ahmad[https://www.linkedin.com/in/sabbirahmad653/]
 
 Portfolio: sabbirahmad.dev
 
 ### 📞 Support
 For technical support or questions about this API:
 
- * 📧 Email: sabbir@shaadimartbd.com
+ * 📧 Email: sabbirahmad653@gmail.com
 
  * 🐛 Issues: GitHub Issues
 
