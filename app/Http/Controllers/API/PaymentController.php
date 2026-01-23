@@ -49,7 +49,8 @@ class PaymentController extends Controller
             $folder = "payments/{$user->id}";
 
             try {
-                $path = $file->store($folder, 's3');
+               // $path = $file->store($folder, 's3');
+                $path = $file->store($folder, 'public');
             } catch (\Throwable $e) {
                 return response()->json([
                     'success' => false,

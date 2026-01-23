@@ -15,80 +15,73 @@ class ProfilePictureController extends Controller
     /**
      * Upload a new profile picture
      */
-    public function upload(Request $request)
-    {
-        try {
-            $request->validate([
-                'image' => 'required|image|mimes:jpg,jpeg,png|max:5120', // max 5MB
-            ]);
+public function upload(Request $request)
+{
+    try {
+        $request->validate([
+            'image' => 'required|image|mimes:jpg,jpeg,png|max:5120', // max 5MB
+        ]);
 
-            $user = Auth::user();
-            if (!$user) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
-            }
-
-            $plan = $user->plan;
-            if (!$plan || !isset($plan->profile_picture_limit)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Your subscription plan is missing a profile picture limit.'
-                ], 403);
-            }
-
-            $limit = (int) $plan->profile_picture_limit;
-            $currentCount = $user->profilePictures()->count();
-            if ($currentCount >= $limit) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "You have reached your plan's picture limit ({$limit}). Please delete one before uploading."
-                ], 403);
-            }
-
-            $file = $request->file('image');
-            $folder = "profile_pictures/{$user->id}";
-            $path = $file->store($folder, 'public');
-
-            $picture = DB::transaction(function () use ($user, $path) {
-                $isPrimary = $user->profilePictures()->count() === 0;
-                return $user->profilePictures()->create([
-                    'image_path' => $path,
-                    'is_primary' => $isPrimary,
-                ]);
-            });
-
-            Log::info('Profile picture uploaded', [
-                'user_id' => $user->id,
-                'picture_id' => $picture->id,
-                'path' => $path,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Profile picture uploaded.',
-                'data' => [
-                    'id' => $picture->id,
-                    'url' => Storage::disk('public')->url($path),
-                    'is_primary' => $picture->is_primary,
-                ],
-            ], 201);
-
-        } catch (\Throwable $e) {
-            Log::error('Upload profile picture failed', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            if (isset($path) && Storage::disk('public')->exists($path)) {
-                Storage::disk('public')->delete($path);
-            }
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Upload failed.',
-                'error' => $e->getMessage(),
-            ], 500);
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
+
+        // 🔁 Delete old profile picture if exists
+        $oldPicture = $user->profilePictures()->first();
+        if ($oldPicture) {
+            if ($oldPicture->image_path && Storage::disk('public')->exists($oldPicture->image_path)) {
+                Storage::disk('public')->delete($oldPicture->image_path);
+            }
+            $oldPicture->delete();
+        }
+
+        // Upload new image
+        $file = $request->file('image');
+        $folder = "profile_pictures/{$user->id}";
+        $path = $file->store($folder, 'public');
+
+        $picture = DB::transaction(function () use ($user, $path) {
+            return $user->profilePictures()->create([
+                'image_path' => $path,
+                'is_primary' => true, // always primary since only 1 image
+            ]);
+        });
+
+        Log::info('Profile picture uploaded', [
+            'user_id' => $user->id,
+            'picture_id' => $picture->id,
+            'path' => $path,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile picture uploaded successfully.',
+            'data' => [
+                'id' => $picture->id,
+                'url' => Storage::disk('public')->url($path),
+                'is_primary' => $picture->is_primary,
+            ],
+        ], 201);
+
+    } catch (\Throwable $e) {
+        Log::error('Upload profile picture failed', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        if (isset($path) && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Upload failed.',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
+
 
     /**
      * List all profile pictures of the authenticated user
