@@ -64,7 +64,10 @@ public function photos()
     return $this->hasMany(ProfilePicture::class, 'user_id', 'user_id');
 }
 
+public function galleryImages()
+{
+    return $this->hasMany(ProfileGalleryImage::class);
 
 
-
+}
 }

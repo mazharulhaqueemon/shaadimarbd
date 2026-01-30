@@ -23,6 +23,9 @@ use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\TrackPhoneRequestController;
 use App\Http\Controllers\API\ChatListController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\ProfileGalleryController;
+
+
 
 Route::post('signup', [AuthController::class, 'signup']);
 Route::post('login', [AuthController::class, 'login']);
@@ -35,7 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/verify-firebase-token', [FirebaseController::class, 'verifyFirebaseToken']);
 
 
-Route::get('/plans/public', [PlanController::class, 'index']); 
+Route::get('/plans/public', [PlanController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/plan', [PlanController::class, 'create']); // create plan
@@ -103,8 +106,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/chat/messages/{otherUserId}', [ChatController::class, 'messages']);
     Route::post('/chat/send', [ChatController::class, 'sendMessage']);
 });
-
-
+// Profile Gallery Routes by Emon
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/profile/gallery/upload', [ProfileGalleryController::class, 'upload']);
+    Route::get('/profile/gallery', [ProfileGalleryController::class, 'index']);
+    Route::delete('/profile/gallery/{id}', [ProfileGalleryController::class, 'destroy']);
+});
 
 Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Request $request) {
     \Log::info('🔐 ===== BROADCAST AUTH REQUEST =====');
@@ -133,7 +140,7 @@ Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Request 
         \Log::info('🔐 Calling Broadcast::auth()');
         $result = Broadcast::auth($request);
         \Log::info('🔐 Broadcast::auth() result type:', ['type' => gettype($result)]);
-        
+
         return $result;
     } catch (\Exception $e) {
         \Log::error('❌ Broadcast auth exception', [
