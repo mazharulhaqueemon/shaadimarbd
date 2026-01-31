@@ -25,7 +25,7 @@ class SignupRequest extends FormRequest
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'account_created_by' => 'required|in:self,father,mother,sibling,relative,agent',
+            'account_created_by' => 'sometimes|string|max:50',
             'otp' => 'nullable|string|max:6',
             'otp_expires_at' => 'nullable|date',
         ];

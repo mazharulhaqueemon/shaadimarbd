@@ -11,9 +11,9 @@ use App\Models\Plan;
 
 class AuthController extends Controller
 {
-    
+
     // Register a new user
-    
+
     public function signup(SignupRequest $request)
 {
     // Fetch the existing 'Basics' plan
@@ -44,7 +44,7 @@ class AuthController extends Controller
 }
 
 
-    
+
     // Authenticate user and generate Laravel Sanctum token
 
     public function login(LoginRequest $request){
@@ -78,9 +78,9 @@ class AuthController extends Controller
 }
 
 
-    
+
     // Logout and revoke tokens
-    
+
     public function logout(Request $request)
     {
         $user = $request->user();

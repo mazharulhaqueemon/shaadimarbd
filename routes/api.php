@@ -28,7 +28,7 @@ use App\Http\Controllers\API\ProfileGalleryController;
 
 
 Route::post('signup', [AuthController::class, 'signup']);
-Route::post('login', [AuthController::class, 'login']);
+Route::post('login', [AuthController::class, 'login'])->name('login');
 
 
 Route::middleware('auth:sanctum')->group(function () {
