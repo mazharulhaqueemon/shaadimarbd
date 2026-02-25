@@ -91,4 +91,10 @@ class AuthController extends Controller
             'message' => 'User logged out successfully',
         ], 200);
     }
+
+    public function index()
+{
+    return User::paginate(10); // 10 users per page
+}
+
 }
